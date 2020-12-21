@@ -25,57 +25,49 @@ void setup()
   
 
 }
-
+  int val;
+  int laststate;
 void loop() {
   // call this method to read the data from the serial input
   // btw: you need to invert the sbus signal to be able to receive it correctly.
   SBus::SIGNAL_STATUS status =  sBus.UpdateChannels();
-  
-  // de volgende software checked de status.
-  // als de status OK is, is er geldige data aanwezig en kunnen de kanalen uitgelezen worden.
-  
-  int delta = 2000;
-  if (delta <= -20015|| delta >= -1985)
-  {
-   //Serial.println(delta); 
-    
-  }
-  if (mytimer.isElapsed())
-  {
-      usecs=(usecs+20)%(2010-990)+990;
-      //Serial.println(usecs); 
-     
-  }
+
   if (status == SBus::SIGNAL_STATUS::OK)
   {
-    
+     laststate = status; 
     // https://github.com/bolderflight/SBUS
     // frsky : minimal value 172, max value 1811
     // kanaal 0 : aileron kanaal (althans bij mijn zender en ontvanger)
 
     // de volgende code vertaald de waarde van channels[0] naar een waarde tussen 0 en 255
     // en stuurt dit vervolgens naar de LED
-    // gevolg: LED helderheid is afhankelijk van de stand van de stuurknuppel
-    int val = map (sBus.getChannels()[0], 172, 1811, 1000, 2000);
-
-    Serial.println(sBus.getChannels()[1]); 
- servo2.writeMicroseconds(val);
-    //analogWrite(9, val);
+    // gevolg: LED he calderheid is afhankelijk van de stand van de stuurknuppel
+    //int val = map (sBus.getChannels()[0], 172, 1811, 1000, 2000);
+    //Serial.println("TO");
+    int newval = sBus.getChannels()[0];
+    newval = map(newval,172,1811,-1024,1023);
+    if (newval != val)
+    {
+      val=newval;
+      Serial.println((val>>1)+1); 
+      servo2.writeMicroseconds(val);
+    }//analogWrite(9, val);
 
   }
- else 
- {
+  else 
+  {
   // toggle the led on pin 13 after a timer elapsed
    // hier heeft de ontvanger laten weten dat er iets niet in orde is
    // het blijkt wel dat er af en toe een communicatie LOST tussendoor komt
    // deze kunnen we dan gevoeglijk negeren
+   if (status != laststate)
+   {
+     laststate = status; 
+    digitalWrite(13,!digitalRead(13)); 
 
- }
+   }
 
- // volgende code gebruikt de timer om iets te doen wanneer die afloopt
- //if(mytimer.isElapsed()) 
- {
-   //Serial.println("elapsed");
-   
- }
+  }
+
+
 }

@@ -1,16 +1,27 @@
+/* 
+* code for shifting bits into channel used from 
+* https://os.mbed.com/users/Digixx/code/SBUS-Library_16channel//file/83e415034198/FutabaSBUS/FutabaSBUS.cpp/
+* mbed R/C Futaba SBUS Library
+* Copyright (c) 2011-2012 digixx
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*/
 #include "SBus.h"
 
 
-
-void SBus::begin() {
-
+SBus::SBus(HardwareSerial& serialport)
+{
+  port = &serialport;
   int16_t loc_channels[18]  = {
     1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 0, 0
   };
 
-  port.begin(BAUDRATE,SERIAL_8E1);
-
-
+  port->begin(BAUDRATE,SERIAL_8E1);
   memcpy(channels, loc_channels, 18);
 
   failsafe_status = NOCONNECTION;
@@ -80,25 +91,6 @@ SBus::SIGNAL_STATUS SBus::UpdateChannels(void)
             ch++;
           }
         }
-    //     channels[0]  = ((sbusData[1] | sbusData[2] << 8) & 0x07FF);
-    //     channels[1]  = ((sbusData[2] >> 3 | sbusData[3] << 5) & 0x07FF);
-    //     channels[2]  = ((sbusData[3] >> 6 | sbusData[4] << 2 | sbusData[5] << 10) & 0x07FF);
-    //     channels[3]  = ((sbusData[5] >> 1 | sbusData[6] << 7) & 0x07FF);
-    //     channels[4]  = ((sbusData[6] >> 4 | sbusData[7] << 4) & 0x07FF);
-    //     channels[5]  = ((sbusData[7] >> 7 | sbusData[8] << 1 | sbusData[9] << 9) & 0x07FF);
-    //     channels[6]  = ((sbusData[9] >> 2 | sbusData[10] << 6) & 0x07FF);
-    //     channels[7]  = ((sbusData[10] >> 5 | sbusData[11] << 3) & 0x07FF); // & the other 8 + 2 channels if you need them
-    // #ifdef ALL_CHANNELS
-    //     channels[8]  = ((sbusData[12] | sbusData[13] << 8) & 0x07FF);
-    //     channels[9]  = ((sbusData[13] >> 3 | sbusData[14] << 5) & 0x07FF);
-    //     channels[10] = ((sbusData[14] >> 6 | sbusData[15] << 2 | sbusData[16] << 10) & 0x07FF);
-    //     channels[11] = ((sbusData[16] >> 1 | sbusData[17] << 7) & 0x07FF);
-    //     channels[12] = ((sbusData[17] >> 4 | sbusData[18] << 4) & 0x07FF);
-    //     channels[13] = ((sbusData[18] >> 7 | sbusData[19] << 1 | sbusData[20] << 9) & 0x07FF);
-    //     channels[14] = ((sbusData[20] >> 2 | sbusData[21] << 6) & 0x07FF);
-    //     channels[15] = ((sbusData[21] >> 5 | sbusData[22] << 3) & 0x07FF);
-    // #endif
-    
         failsafe_status = SIGNAL_STATUS::OK;
         // Failsafe
         if (sbusData[23] & (1 << 2)) 
@@ -130,14 +122,14 @@ SBus::RECEIVER_STATE SBus::Parse()
   switch (receiveState) 
   {
     case WAITINGFORSTART: // we are waiting for the first byte to arrive
-      if (port.available() > 0) 
+      if (port->available() > 0) 
       {
-        inData = port.read(); // read one byte
+        inData = port->read(); // read one byte
         if (inData != 0x0f) // we will throw away any byte that is received that is not the start byte
         {
-          while (port.available() > 0) 
+          while (port->available() > 0) 
           { //read the contents of in buffer and discard it, whe are out of sync
-            inData = port.read();
+            inData = port->read();
           }
         }
         else {
@@ -156,9 +148,9 @@ SBus::RECEIVER_STATE SBus::Parse()
       }
       break;
     case RECEIVING: // we are reading the bytes
-      while (port.available() > 0) // while is allowed as we read until it is empty
+      while (port->available() > 0) // while is allowed as we read until it is empty
       {
-        inData = port.read(); // read one byte
+        inData = port->read(); // read one byte
         bufferIndex ++;
         sbusData[bufferIndex] = inData;
         

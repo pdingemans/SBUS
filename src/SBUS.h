@@ -23,7 +23,7 @@
 
 
 #define BAUDRATE 100000
-#define port Serial
+//#define port Serial
 #define TIMEOUT 4// 10 msec to get a complete message
 #define ALL_CHANNELS
 
@@ -31,6 +31,7 @@
 class SBus
 {
 	public:
+		SBus(HardwareSerial& serialport);
 		enum SIGNAL_STATUS
 		{
 			OK,// =      0x00,
@@ -39,7 +40,6 @@ class SBus
 			NOCONNECTION,// 		= 0x04,
 		};
 
-		void begin(void);
 		int16_t* getChannels();
 		SIGNAL_STATUS getStatus(void);
 		SIGNAL_STATUS UpdateChannels(void);
@@ -57,7 +57,7 @@ class SBus
 		int16_t channels[18];
     	SIGNAL_STATUS  failsafe_status;
 		int bufferIndex;
-		
+		HardwareSerial* port;
 		Timer timer;
 		
 		

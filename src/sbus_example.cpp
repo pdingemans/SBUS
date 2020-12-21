@@ -1,7 +1,10 @@
+#include <Arduino.h>
 #include "SBus.h"
 #include "Timer.h"
 #include <Servo.h>
-SBus sBus;
+
+SBus sBus(Serial);
+
 Timer mytimer;
 Servo servo1;
 Servo servo2;
@@ -11,7 +14,7 @@ void setup()
 {
   pinMode (9, OUTPUT);
   pinMode (13, OUTPUT);
-  sBus.begin();
+  
   Serial.println("starting the sbus decoder");
 
   mytimer.startRepeat(10); // start de timer zodat die na 500 msec elapsed geeft en zichzelf weer start daarna

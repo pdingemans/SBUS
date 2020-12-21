@@ -1,5 +1,6 @@
-#include <Arduino.h>
-#include "SBUS.h"
+#include "SBus.h"
+
+
 
 void SBus::begin() {
 
@@ -123,6 +124,7 @@ SBus::SIGNAL_STATUS SBus::UpdateChannels(void)
 
 SBus::RECEIVER_STATE SBus::Parse()
 {
+  uint8_t inData;
   RECEIVER_STATE status = RECEIVING; // we assume we will fail
 
   switch (receiveState) 
@@ -140,8 +142,8 @@ SBus::RECEIVER_STATE SBus::Parse()
         }
         else {
           bufferIndex = 0;
-          inBuffer[bufferIndex] = inData;
-          inBuffer[24] = 0xff; // load it with 0xFF as correct value will set it to 0.
+          sbusData[bufferIndex] = inData;
+          sbusData[24] = 0xff; // load it with 0xFF as correct value will set it to 0.
           receiveState=RECEIVING;
           timer.startOneShot(TIMEOUT);// we have 5 msec to get the data....
         }
@@ -158,17 +160,14 @@ SBus::RECEIVER_STATE SBus::Parse()
       {
         inData = port.read(); // read one byte
         bufferIndex ++;
-        inBuffer[bufferIndex] = inData;
+        sbusData[bufferIndex] = inData;
         
         if (bufferIndex == 24) {
           receiveState = WAITINGFORSTART;
            timer.startOneShot(50); // we want to have something again within 50 msecs
           // check if the last byte = 0 , if thats the case its probably ok
-          if (inBuffer[24] == 0x00) {
-           
-            memcpy(sbusData, inBuffer, 25);
+          if (sbusData[24] == 0x00) {
             status = RECEIVED;
-           
           }
           else 
           {

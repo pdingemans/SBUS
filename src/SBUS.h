@@ -56,14 +56,8 @@ class SBus
 		uint8_t sbusData[25];
 		int16_t channels[18];
     	SIGNAL_STATUS  failsafe_status;
-		uint8_t byte_in_sbus;
-		uint8_t bit_in_sbus;
-		uint8_t ch;
-		uint8_t bit_in_channel;
-		uint8_t bit_in_servo;
-		uint8_t inBuffer[25];
 		int bufferIndex;
-		uint8_t inData;
+		
 		Timer timer;
 		
 		

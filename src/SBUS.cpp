@@ -27,7 +27,7 @@ SBus::SBus(HardwareSerial& serialport)
   failsafe_status = NOCONNECTION;
   bufferIndex = 0;
   receiveState = WAITINGFORSTART;
-  timer.startRepeat(50);
+  timer.startRepeat(SBUSREPEATTIME);
 }
 
 uint16_t* SBus::getChannels() {
@@ -40,31 +40,7 @@ uint16_t* SBus::getChannels() {
     return 1023;
   } */
 }
-/*
-void SBus::begin()
-{
 
-  uart_init(UART_ID, BAUDRATE);
-  uart_set_format(UART_ID, 8, 1, UART_PARITY_EVEN);
-  gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
-  gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
-  gpio_set_inover(UART_RX_PIN, GPIO_OVERRIDE_INVERT);
-
-
-
-  for (uint8_t i = 0; i < 16; i++)
-  {
-    channels[i] = 0;
-  }
-  // two highest channels are set to 0
-  memset(&channels[16], 0, sizeof(uint16_t) * 2);
-
-  failsafe_status = LOST;
-  bufferIndex = 0;
-  receiveState = WAITINGFORSTART;
-  timer.startRepeat(50);
-}
-*/
 
 uint16_t SBus::getChannelValue(uint8_t nr)
 {
@@ -164,11 +140,11 @@ SBus::RECEIVER_STATE SBus::Parse()
           timer.startOneShot(SBUSTIMEOUT);// we have 5 msec to get the data....
         }
       }
-      if (timer.isElapsed())
+      else if (timer.isElapsed())
       {
         // we didnt receive anything within time so I guess its an error.
         status = ERROR;
-        timer.startOneShot(50);// 50 msecs for anothe try
+        timer.startOneShot(SBUSREPEATTIME);
       }
       break;
     case RECEIVING: // we are reading the bytes
@@ -198,6 +174,7 @@ SBus::RECEIVER_STATE SBus::Parse()
         // also there's no more bytes in the buffer, so lets start over again.
         receiveState = WAITINGFORSTART;
         status = ERROR;
+        timer.startOneShot(SBUSREPEATTIME);
       }
 
       break;

@@ -30,7 +30,7 @@ SBus::SBus(HardwareSerial& serialport)
   timer.startRepeat(50);
 }
 
-int16_t* SBus::getChannels() {
+uint16_t* SBus::getChannels() {
   // Read channel data
   return channels;
   /* if ((ch > 0) && (ch <= 16)) {
@@ -40,76 +40,100 @@ int16_t* SBus::getChannels() {
     return 1023;
   } */
 }
+/*
+void SBus::begin()
+{
+
+  uart_init(UART_ID, BAUDRATE);
+  uart_set_format(UART_ID, 8, 1, UART_PARITY_EVEN);
+  gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
+  gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
+  gpio_set_inover(UART_RX_PIN, GPIO_OVERRIDE_INVERT);
 
 
 
-SBus::SIGNAL_STATUS SBus::getStatus(void) {
+  for (uint8_t i = 0; i < 16; i++)
+  {
+    channels[i] = 0;
+  }
+  // two highest channels are set to 0
+  memset(&channels[16], 0, sizeof(uint16_t) * 2);
+
+  failsafe_status = LOST;
+  bufferIndex = 0;
+  receiveState = WAITINGFORSTART;
+  timer.startRepeat(50);
+}
+*/
+
+uint16_t SBus::getChannelValue(uint8_t nr)
+{
+  // we do not check the channel nr as it is the responsibility of the caller to pass the correct channel
+  // least value from frsky =172
+  // max value = 1811
+  // this maps from values -1024 to 1023. this is tested with mixer test script.
+  int16_t val = channels[nr-1];
+  //val =  improved_map( val, 172, 1811,0, 512);
+  return val;
+ // return channels[nr - 1];
+
+  //  return map(channels[nr-1],172,1811,-1024,1023);
+}
+
+SBus::SIGNAL_STATUS SBus::getStatus(void)
+{
   return failsafe_status;
 }
 
 SBus::SIGNAL_STATUS SBus::UpdateChannels(void)
 {
   RECEIVER_STATE state = Parse();
-  
+
   switch (state)
   {
-    case RECEIVING:
-      //Serial.println("receiving");
-      break;
-    case ERROR:
-      //Serial.println("in error state");
-      failsafe_status = LOST;
-      break;
-    case RECEIVED:
-      {
-        //clear all the bytes first as we are or-ing them later on
-        memset(channels,0,16); 
-        // reset counters
-        uint8_t byte_in_sbus = 1;
-        uint8_t bit_in_sbus = 0;
-        uint8_t ch = 0;
-        uint8_t bit_in_channel = 0;
+  case RECEIVING:
+    break;
+  case ERROR:
+  
+    failsafe_status = LOST;
+    break;
+  case RECEIVED:
+  {
 
-        // process actual sbus data
-        for (uint8_t i=0; i<176; i++) 
-        {
-          if (sbusData[byte_in_sbus] & (1<<bit_in_sbus)) 
-          {
-            channels[ch] |= (1<<bit_in_channel);
-          }
-          bit_in_sbus++;
-          bit_in_channel++;
+    channels[0] = ((sbusData[1] | sbusData[2] << 8) & 0x07FF);
+    channels[1] = ((sbusData[2] >> 3 | sbusData[3] << 5) & 0x07FF);
+    channels[2] = ((sbusData[3] >> 6 | sbusData[4] << 2 | sbusData[5] << 10) & 0x07FF);
+    channels[3] = ((sbusData[5] >> 1 | sbusData[6] << 7) & 0x07FF);
+    channels[4] = ((sbusData[6] >> 4 | sbusData[7] << 4) & 0x07FF);
+    channels[5] = ((sbusData[7] >> 7 | sbusData[8] << 1 | sbusData[9] << 9) & 0x07FF);
+    channels[6] = ((sbusData[9] >> 2 | sbusData[10] << 6) & 0x07FF);
+    channels[7] = ((sbusData[10] >> 5 | sbusData[11] << 3) & 0x07FF); // & the other 8 + 2 channels if you need them
 
-          if (bit_in_sbus == 8) 
-          {
-            bit_in_sbus =0;
-            byte_in_sbus++;
-          }
-          if (bit_in_channel == 11)
-          {
-            bit_in_channel =0;
-            ch++;
-          }
-        }
-        failsafe_status = SIGNAL_STATUS::OK;
-        // Failsafe
-        if (sbusData[23] & (1 << 2)) 
-        {
-            //Serial.print("in lost ");
-            //Serial.println(millis());
-          failsafe_status = SIGNAL_STATUS::LOST;
-        }
-        else if (sbusData[23] & (1 << 3)) 
-        {
-          //Serial.println("in failsafe state");
-          failsafe_status = FAILSAFE;
-        }
-      }
-      break;
-    default:
-      //Serial.println("in default state");
-      failsafe_status=LOST;
-      break;
+    channels[8] = ((sbusData[12] | sbusData[13] << 8) & 0x07FF);
+    channels[9] = ((sbusData[13] >> 3 | sbusData[14] << 5) & 0x07FF);
+    channels[10] = ((sbusData[14] >> 6 | sbusData[15] << 2 | sbusData[16] << 10) & 0x07FF);
+    channels[11] = ((sbusData[16] >> 1 | sbusData[17] << 7) & 0x07FF);
+    channels[12] = ((sbusData[17] >> 4 | sbusData[18] << 4) & 0x07FF);
+    channels[13] = ((sbusData[18] >> 7 | sbusData[19] << 1 | sbusData[20] << 9) & 0x07FF);
+    channels[14] = ((sbusData[20] >> 2 | sbusData[21] << 6) & 0x07FF);
+    channels[15] = ((sbusData[21] >> 5 | sbusData[22] << 3) & 0x07FF);
+
+    failsafe_status = SIGNAL_STATUS::OK;
+    // Failsafe
+    if (sbusData[23] & (1 << 2))
+    {
+      failsafe_status = SIGNAL_STATUS::LOST;
+    }
+    else if (sbusData[23] & (1 << 3))
+    {
+      failsafe_status = FAILSAFE;
+    }
+  }
+  break;
+  default:
+  
+    failsafe_status = LOST;
+    break;
   }
   return failsafe_status;
 }
@@ -137,7 +161,7 @@ SBus::RECEIVER_STATE SBus::Parse()
           sbusData[bufferIndex] = inData;
           sbusData[24] = 0xff; // load it with 0xFF as correct value will set it to 0.
           receiveState=RECEIVING;
-          timer.startOneShot(TIMEOUT);// we have 5 msec to get the data....
+          timer.startOneShot(SBUSTIMEOUT);// we have 5 msec to get the data....
         }
       }
       if (timer.isElapsed())

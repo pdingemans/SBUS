@@ -24,8 +24,12 @@
 
 #define BAUDRATE 100000
 //#define port Serial
-#define TIMEOUT 4// 10 msec to get a complete message
+
 #define ALL_CHANNELS
+
+#define SBUS_STARTCHAR 0x0f
+#define SBUS_ENDCHAR 0x0
+#define SBUSTIMEOUT 5000 //usecs=5msec to get a complete message
 
 
 class SBus
@@ -39,8 +43,9 @@ class SBus
 			FAILSAFE,// 		 =  0x03,
 			NOCONNECTION,// 		= 0x04,
 		};
-
-		int16_t* getChannels();
+		void begin();	
+		uint16_t* getChannels();
+		uint16_t getChannelValue (uint8_t nr);
 		SIGNAL_STATUS getStatus(void);
 		SIGNAL_STATUS UpdateChannels(void);
 	
@@ -54,7 +59,7 @@ class SBus
 		} receiveState;
 		RECEIVER_STATE Parse();
 		uint8_t sbusData[25];
-		int16_t channels[18];
+		uint16_t channels[18];
     	SIGNAL_STATUS  failsafe_status;
 		int bufferIndex;
 		HardwareSerial* port;

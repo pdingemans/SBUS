@@ -17,13 +17,13 @@
 SBus::SBus(HardwareSerial& serialport)
 {
   port = &serialport;
-  int16_t loc_channels[18]  = {
-    1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 0, 0
-  };
+
+  for (size_t i =0 ; i<sizeof(channels)/sizeof(channels[0]); i++)
+  {
+    channels[i]=992; // midway 172 and 1811
+  }
 
   port->begin(BAUDRATE,SERIAL_8E1);
-  memcpy(channels, loc_channels, 18);
-
   failsafe_status = NOCONNECTION;
   bufferIndex = 0;
   receiveState = WAITINGFORSTART;

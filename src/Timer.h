@@ -7,8 +7,8 @@ class Timer
 {
     public:
     Timer();
-    void startRepeat(unsigned int repeatTime);
-    void startOneShot(unsigned int repeatTime);
+    void startRepeat(uint16_t repeatTime);
+    void startOneShot(uint16_t repeatTime);
     bool isElapsed();
     private:
     unsigned long starttime;

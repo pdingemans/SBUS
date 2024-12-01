@@ -29,8 +29,8 @@
 
 #define SBUS_STARTCHAR 0x0f
 #define SBUS_ENDCHAR 0x0
-#define SBUSTIMEOUT 5000 //usecs=5msec to get a complete message
-#define SBUSREPEATTIME 20000
+#define SBUSTIMEOUT 5 //usecs=5msec to get a complete message
+#define SBUSREPEATTIME 20
 
 
 class SBus

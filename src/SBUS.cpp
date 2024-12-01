@@ -64,7 +64,7 @@ SBus::SIGNAL_STATUS SBus::getStatus(void)
 SBus::SIGNAL_STATUS SBus::UpdateChannels(void)
 {
   RECEIVER_STATE state = Parse();
-
+ 
   switch (state)
   {
   case RECEIVING:
@@ -124,15 +124,20 @@ SBus::RECEIVER_STATE SBus::Parse()
     case WAITINGFORSTART: // we are waiting for the first byte to arrive
       if (port->available() > 0) 
       {
+
+
         inData = port->read(); // read one byte
+
         if (inData != 0x0f) // we will throw away any byte that is received that is not the start byte
         {
           while (port->available() > 0) 
           { //read the contents of in buffer and discard it, whe are out of sync
+   
             inData = port->read();
           }
         }
         else {
+
           bufferIndex = 0;
           sbusData[bufferIndex] = inData;
           sbusData[24] = 0xff; // load it with 0xFF as correct value will set it to 0.
@@ -150,16 +155,18 @@ SBus::RECEIVER_STATE SBus::Parse()
     case RECEIVING: // we are reading the bytes
       while (port->available() > 0) // while is allowed as we read until it is empty
       {
+
         inData = port->read(); // read one byte
         bufferIndex ++;
         sbusData[bufferIndex] = inData;
         
         if (bufferIndex == 24) {
           receiveState = WAITINGFORSTART;
-           timer.startOneShot(50); // we want to have something again within 50 msecs
+           timer.startOneShot(SBUSREPEATTIME); // we want to have something again within 50 msecs
           // check if the last byte = 0 , if thats the case its probably ok
           if (sbusData[24] == 0x00) {
             status = RECEIVED;
+
           }
           else 
           {
@@ -170,6 +177,7 @@ SBus::RECEIVER_STATE SBus::Parse()
       }
       if (timer.isElapsed())
       {
+  
         // we have a time out, so somethings has gone wrong
         // also there's no more bytes in the buffer, so lets start over again.
         receiveState = WAITINGFORSTART;

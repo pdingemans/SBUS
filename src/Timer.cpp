@@ -3,25 +3,25 @@
   
 Timer::Timer()
 {
-    starttime=micros();
+    starttime=millis();
     time = 0;  
     oneshot=true;
 }
-void Timer::startRepeat(unsigned int repeatTime)
+void Timer::startRepeat(uint16_t repeatTime)
 {
-    starttime=micros();
+    starttime=millis();
     oneshot=false;
     time = repeatTime;
 }
-void Timer::startOneShot(unsigned int repeatTime)
+void Timer::startOneShot(uint16_t repeatTime)
 {
-    starttime=micros();
+    starttime=millis();
     oneshot=true;
     time = repeatTime;
 }
 bool Timer::isElapsed()
 {
-    bool elapsed = (micros()-starttime>time);
+    bool elapsed = ((millis()-starttime)>time);
     if (elapsed && !oneshot)
     {
         startRepeat(time);
